@@ -449,7 +449,7 @@ body {min-height:0;padding:12px;gap:12px;}
       canvas.style.clipPath = 'path("' + drawingRegions.map(r =>
         'M' + r.x + ' ' + r.y + ' h' + r.w + ' v' + r.h + ' h-' + r.w + ' Z').join(' ') + '")';
       layoutConditions(given);
-      const baselineLength = Math.min(360, workspace.w * 0.64);
+      const baselineLength = workspace.w * 0.84;
       const baselineY = workspace.y + workspace.h * 0.64;
       conditionGeometry.push({
         type:'segment',
