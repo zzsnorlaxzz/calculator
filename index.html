@@ -449,6 +449,14 @@ body {min-height:0;padding:12px;gap:12px;}
       canvas.style.clipPath = 'path("' + drawingRegions.map(r =>
         'M' + r.x + ' ' + r.y + ' h' + r.w + ' v' + r.h + ' h-' + r.w + ' Z').join(' ') + '")';
       layoutConditions(given);
+      const baselineLength = Math.min(360, workspace.w * 0.64);
+      const baselineY = workspace.y + workspace.h * 0.64;
+      conditionGeometry.push({
+        type:'segment',
+        p1:{x:workspace.x+(workspace.w-baselineLength)/2,y:baselineY},
+        p2:{x:workspace.x+(workspace.w+baselineLength)/2,y:baselineY},
+        color:'#64748b',hideStartPoint:true,hideEndPoint:true,isBaseline:true
+      });
       render();
     }
     function inDrawingRegion(point) {
@@ -483,7 +491,7 @@ body {min-height:0;padding:12px;gap:12px;}
           const vertex={x:area.x+(area.w-rayLength*(maxX-minX))/2-rayLength*minX,
             y:top+34+(availableHeight-rayLength*(maxY-minY))/2-rayLength*minY};
           const ends=directions.map(a=>({x:vertex.x+rayLength*Math.cos(a),y:vertex.y+rayLength*Math.sin(a)}));
-          conditionGeometry.push({type:'segment',p1:vertex,p2:ends[0],color},{type:'segment',p1:vertex,p2:ends[1],color});
+          conditionGeometry.push({type:'segment',p1:vertex,p2:ends[0],color,hideEndPoint:true},{type:'segment',p1:vertex,p2:ends[1],color,hideEndPoint:true});
           conditionLabels.push({text:key,x:vertex.x-18,y:vertex.y+5});
         }
       });
@@ -1055,7 +1063,8 @@ body {min-height:0;padding:12px;gap:12px;}
           drawPoint(el.x, el.y, el.color || '#111827', 4.5);
         } else if (el.type === 'segment') {
           ctx.beginPath(); ctx.moveTo(el.p1.x, el.p1.y); ctx.lineTo(el.p2.x, el.p2.y); ctx.stroke();
-          drawPoint(el.p1.x, el.p1.y, el.color); drawPoint(el.p2.x, el.p2.y, el.color);
+          if (!el.hideStartPoint) drawPoint(el.p1.x, el.p1.y, el.color);
+          if (!el.hideEndPoint) drawPoint(el.p2.x, el.p2.y, el.color);
         } else if (el.type === 'line') {
           drawInfiniteLine(el.p1, el.p2);
           drawPoint(el.p1.x, el.p1.y, el.color); drawPoint(el.p2.x, el.p2.y, el.color);
