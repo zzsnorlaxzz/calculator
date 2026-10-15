@@ -454,9 +454,15 @@ body {padding:8px;gap:8px;}
       conditionGeometry = [];
       conditionLabels = [];
       const selected = [...document.querySelectorAll('#condition-options input:checked')].map(input => input.value);
-      const rowHeight = area.h / Math.max(1, selected.length);
-      selected.forEach((key, index) => {
-        const top = area.y + index * rowHeight;
+      const sideCount = selected.filter(key => key.length === 2).length;
+      const angleCount = selected.length - sideCount;
+      const segmentRowHeight = Math.min(88, area.h / Math.max(1, selected.length));
+      const angleRowHeight = angleCount > 0 ? (area.h - sideCount * segmentRowHeight) / angleCount : 0;
+      let nextTop = area.y;
+      selected.forEach(key => {
+        const rowHeight = key.length === 2 ? segmentRowHeight : angleRowHeight;
+        const top = nextTop;
+        nextTop += rowHeight;
         conditionLabels.push({ text: conditionNames[key], x: area.x + 20, y: top + 22, heading: true });
         const color = '#2563eb';
         if (key.length === 2) {
