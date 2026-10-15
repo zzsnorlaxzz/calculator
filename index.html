@@ -249,6 +249,33 @@ body {min-height:0;padding:12px;gap:12px;}
 #pen-settings h2 {font-size:18px;margin:0 0 12px;}
 #pen-settings::backdrop {background:rgba(15,23,42,.3);}
 #pen-settings button {padding:6px 18px;cursor:pointer;}
+
+#btn-relations {margin-left:auto;font-size:12px;}
+#conditions-title .panel-note {margin-left:0;}
+#relations-dialog {width:min(760px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;border:1px solid #dce3ec;border-radius:16px;padding:20px;color:#243247;background:#fff;}
+#relations-dialog::backdrop {background:rgba(15,23,42,.4);}
+.relation-header {display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.relation-header h2 {font-size:19px;margin:0;}
+.relation-header button {border:1px solid #cbd5e1;border-radius:7px;background:white;padding:6px 12px;cursor:pointer;}
+.relation-intro {font-size:13px;line-height:1.7;color:#475569;margin:12px 0;}
+.relation-tabs {display:flex;gap:8px;border-bottom:1px solid #e2e8f0;padding-bottom:10px;}
+.relation-tabs button {flex:1;padding:9px 6px;border:1px solid #dce3ec;border-radius:8px;background:#f8fafc;cursor:pointer;font-size:14px;color:#475569;}
+.relation-tabs button[aria-selected="true"] {background:#eff6ff;border-color:#60a5fa;color:#1d4ed8;font-weight:600;}
+.relation-tabs button:focus-visible,.small-action:focus-visible {outline:3px solid #93c5fd;outline-offset:2px;}
+#relation-diagram {background:#f8fafc;border-radius:10px;}
+#relation-diagram svg {display:block;width:100%;max-height:260px;}
+.relation-example-label {font-size:12px;color:#64748b;margin:12px 0 8px;}
+.relation-legend {display:flex;flex-wrap:wrap;gap:8px 18px;margin:12px 0;font-size:13px;}
+.relation-legend span {display:flex;align-items:center;gap:6px;}
+.relation-legend i {width:16px;height:4px;border-radius:2px;display:inline-block;}
+#relation-explanation {line-height:1.7;margin:8px 0;font-size:14px;}
+.relation-question {padding:12px;background:#eff6ff;color:#1e40af;border-radius:8px;font-size:14px;line-height:1.6;margin:10px 0 0;}
+@media(max-height:650px) {
+ #relations-dialog {padding:14px;}
+ #relation-diagram svg {max-height:180px;}
+ .relation-intro {margin:8px 0;}
+ .relation-question {padding:8px;}
+}
 </style>
 </head>
 <body>
@@ -343,22 +370,39 @@ body {min-height:0;padding:12px;gap:12px;}
     <p>신호가 없으면 태블릿의 S펜 / 에어 커맨드 설정에서<br>버튼 동작이 브라우저 입력을 가로채는지 확인하세요.</p>
     <form method="dialog"><button>닫기</button></form>
   </dialog>
+  <dialog id="relations-dialog" aria-labelledby="relations-title">
+    <div class="relation-header"><h2 id="relations-title">변과 각의 위치 관계</h2><form method="dialog"><button aria-label="관계 설명 닫기">닫기</button></form></div>
+    <p class="relation-intro">선분과 각의 번호는 재료를 구분하는 표시입니다. <strong>같은 번호끼리 대응한다는 뜻은 아닙니다.</strong></p>
+    <div class="relation-tabs" role="tablist" aria-label="위치 관계 설명">
+      <button role="tab" id="tab-included" aria-selected="true" aria-controls="relation-panel" data-relation="included">끼인각</button>
+      <button role="tab" id="tab-endpoints" aria-selected="false" aria-controls="relation-panel" data-relation="endpoints" tabindex="-1">양 끝 각</button>
+      <button role="tab" id="tab-compare" aria-selected="false" aria-controls="relation-panel" data-relation="compare" tabindex="-1">배치 비교</button>
+      <button role="tab" id="tab-intersections" aria-selected="false" aria-controls="relation-panel" data-relation="intersections" tabindex="-1">두 교점</button>
+    </div>
+    <div id="relation-panel" role="tabpanel" aria-labelledby="tab-included" tabindex="0">
+      <p class="relation-example-label">위치 관계 설명용 예시</p>
+      <div id="relation-diagram"></div>
+      <div id="relation-legend" class="relation-legend"></div>
+      <p id="relation-explanation"></p>
+      <p id="relation-question" class="relation-question"></p>
+    </div>
+  </dialog>
   <main class="lesson-layout">
     <aside class="condition-column">
       <section class="lesson-panel" aria-labelledby="conditions-title">
-        <h2 class="panel-heading" id="conditions-title">조건 선택<span class="panel-note" id="selection-count">0 / 3개</span></h2>
+        <h2 class="panel-heading" id="conditions-title">조건 선택<button id="btn-relations" class="small-action" title="끼인각과 양 끝 각의 위치 관계">관계 설명</button><span class="panel-note" id="selection-count">0 / 3개</span></h2>
         <fieldset id="condition-options" aria-label="삼각형 조건 (최대 3개)">
-          <label><input type="checkbox" value="AB">선분 AB</label>
-          <label><input type="checkbox" value="BC">선분 BC</label>
-          <label><input type="checkbox" value="CA">선분 CA</label>
-          <label><input type="checkbox" value="A">각 A</label>
-          <label><input type="checkbox" value="B">각 B</label>
-          <label><input type="checkbox" value="C">각 C</label>
+          <label><input type="checkbox" value="AB">선분 ①</label>
+          <label><input type="checkbox" value="BC">선분 ②</label>
+          <label><input type="checkbox" value="CA">선분 ③</label>
+          <label><input type="checkbox" value="A">각 ①</label>
+          <label><input type="checkbox" value="B">각 ②</label>
+          <label><input type="checkbox" value="C">각 ③</label>
         </fieldset>
         <p id="condition-feedback" role="status">조건은 최대 3개까지 선택할 수 있습니다.</p>
       </section>
       <section class="lesson-panel conditions-panel" aria-labelledby="given-title">
-        <h2 class="panel-heading" id="given-title">주어진 조건</h2>
+        <h2 class="panel-heading" id="given-title">주어진 조건<span class="panel-note" title="번호는 조건 구분용이며 선분과 각의 대응을 뜻하지 않습니다.">번호는 구분용</span></h2>
         <div id="condition-cards" aria-live="polite"></div>
       </section>
     </aside>
@@ -488,14 +532,14 @@ body {min-height:0;padding:12px;gap:12px;}
       const rowHeight = area.h / Math.max(1, selected.length);
       selected.forEach((key, index) => {
         const top = area.y + index * rowHeight;
-        conditionLabels.push({ text: key.length === 2 ? '선분 ' + key : '각 ' + key, x: area.x + 20, y: top + 28, heading: true });
+        conditionLabels.push({ text: conditionNames[key], x: area.x + 20, y: top + 28, heading: true });
         const color = '#2563eb';
         if (key.length === 2) {
           const length = triangleSides[key] * 40;
           const p1 = { x: area.x + (area.w-length)/2, y: top+rowHeight*.57 };
           const p2 = { x: p1.x+length, y: p1.y };
           conditionGeometry.push({type:'segment',p1,p2,color});
-          conditionLabels.push({text:key[0],x:p1.x-6,y:p1.y+24},{text:key[1],x:p2.x-6,y:p2.y+24});
+
         } else {
           const rad = triangleAngles[key] * Math.PI/180;
           // Keep one ray horizontal, parallel to the construction baseline.
@@ -509,7 +553,7 @@ body {min-height:0;padding:12px;gap:12px;}
             y:top+34+(availableHeight-rayLength*(maxY-minY))/2-rayLength*minY};
           const ends=directions.map(a=>({x:vertex.x+rayLength*Math.cos(a),y:vertex.y+rayLength*Math.sin(a)}));
           conditionGeometry.push({type:'segment',p1:vertex,p2:ends[0],color,hideEndPoint:true},{type:'segment',p1:vertex,p2:ends[1],color,hideEndPoint:true});
-          conditionLabels.push({text:key,x:vertex.x-18,y:vertex.y+5});
+
         }
       });
     }
@@ -1711,6 +1755,7 @@ body {min-height:0;padding:12px;gap:12px;}
 
 
     window.addEventListener('keydown', (e) => {
+      if (document.querySelector('dialog[open]')) return;
       if (e.key === 'Escape') { 
         e.preventDefault(); 
         if (globalRuler || currentTool === 'unmarked-ruler') {
@@ -1834,6 +1879,8 @@ body {min-height:0;padding:12px;gap:12px;}
     document.getElementById('btn-clear').addEventListener('click', (e) => { e.preventDefault(); recordState(); elements = []; selectedImage = null; clearSelection(); render(); });
 
 
+    // Internal keys preserve the source geometry; visible numbers imply no correspondence.
+    const conditionNames = {AB:'선분 ①',BC:'선분 ②',CA:'선분 ③',A:'각 ①',B:'각 ②',C:'각 ③'};
     // AB=6, BC=4, CA=8; each angle is opposite the named vertex.
     const triangleSides = { AB: 6, BC: 4, CA: 8 };
     const angleFromSides = (adjacent1, adjacent2, opposite) =>
@@ -1852,13 +1899,111 @@ body {min-height:0;padding:12px;gap:12px;}
         ? '3개를 선택했습니다. 다른 조건을 선택하려면 먼저 하나를 해제하세요.'
         : '조건은 최대 3개까지 선택할 수 있습니다.';
       document.getElementById('condition-cards').setAttribute('aria-label',
-        selected.length ? selected.map(input => input.value.length === 2 ? '선분 ' + input.value : '각 ' + input.value).join(', ') : '선택한 조건 없음');
+        selected.length ? selected.map(input => conditionNames[input.value]).join(', ') : '선택한 조건 없음');
       resizeCanvas();
     }
     conditionInputs.forEach(input => input.addEventListener('change', () => {
       if (conditionInputs.filter(item => item.checked).length > 3) input.checked = false;
       renderConditions();
     }));
+
+    const relationColors = {side:'#c2410c',secondSide:'#0f766e',firstAngle:'#2563eb',secondAngle:'#7c3aed'};
+    function relationLine(p,q,color,width=3) {
+      return '<path d="M'+p.x+' '+p.y+' L'+q.x+' '+q.y+'" fill="none" stroke="'+color+'" stroke-width="'+width+'" stroke-linecap="round"/>';
+    }
+    function relationSector(center,p,q,color,radius=34) {
+      const start=Math.atan2(p.y-center.y,p.x-center.x);
+      let diff=Math.atan2(q.y-center.y,q.x-center.x)-start;
+      while(diff>Math.PI) diff-=Math.PI*2;
+      while(diff< -Math.PI) diff+=Math.PI*2;
+      const a={x:center.x+radius*Math.cos(start),y:center.y+radius*Math.sin(start)};
+      const b={x:center.x+radius*Math.cos(start+diff),y:center.y+radius*Math.sin(start+diff)};
+      return '<path d="M'+center.x+' '+center.y+' L'+a.x+' '+a.y+' A'+radius+' '+radius+' 0 0 '+(diff>0?1:0)+' '+b.x+' '+b.y+' Z" fill="'+color+'" fill-opacity=".18" stroke="'+color+'" stroke-width="2"/>';
+    }
+    function exampleTriangle(left,baseY,length,firstAngle,secondAngle) {
+      const a=firstAngle*Math.PI/180,b=secondAngle*Math.PI/180;
+      const height=length/(1/Math.tan(a)+1/Math.tan(b));
+      return [{x:left,y:baseY},{x:left+length,y:baseY},{x:left+height/Math.tan(a),y:baseY-height}];
+    }
+    function triangleOutline(points) {
+      const [p,q,r]=points;
+      return relationLine(p,q,'#cbd5e1',2)+relationLine(q,r,'#cbd5e1',2)+relationLine(r,p,'#cbd5e1',2);
+    }
+    function showRelation(kind) {
+      document.querySelectorAll('[data-relation]').forEach(button=>{
+        const selected=button.dataset.relation===kind;
+        button.setAttribute('aria-selected',String(selected));button.tabIndex=selected?0:-1;
+      });
+      document.getElementById('relation-panel').setAttribute('aria-labelledby','tab-'+kind);
+      const colors=relationColors, points=exampleTriangle(140,218,320,40,60),[p,q,r]=points;
+      let drawing='',legend=[],explanation='',question='',description='';
+      if(kind==='included') {
+        drawing=triangleOutline(points)+relationSector(p,q,r,colors.firstAngle,48)
+          +relationLine(p,q,colors.side,5)+relationLine(p,r,colors.secondSide,5);
+        legend=[[colors.side,'첫 번째 변'],[colors.secondSide,'두 번째 변'],[colors.firstAngle,'두 변의 끼인각']];
+        explanation='두 변이 한 꼭짓점에서 만날 때, 그 두 변 사이에 놓인 각이 끼인각입니다.';
+        question='주어진 두 선분을 이 두 변에 놓는다면, 주어진 각은 어디에 놓아야 할까요?';
+        description='주황색 변과 초록색 변이 만나는 꼭짓점에서 두 변 사이의 각을 파란색으로 강조한 삼각형';
+      } else if(kind==='endpoints') {
+        drawing=triangleOutline(points)+relationSector(p,q,r,colors.firstAngle,43)
+          +relationSector(q,r,p,colors.secondAngle,43)+relationLine(p,q,colors.side,5);
+        legend=[[colors.side,'기준이 되는 한 변'],[colors.firstAngle,'한쪽 끝의 각'],[colors.secondAngle,'다른 쪽 끝의 각']];
+        explanation='한 변의 두 끝점에서 삼각형 안쪽으로 만들어지는 두 각이, 그 변의 양 끝 각입니다.';
+        question='두 각 중 하나를 맞은편 꼭짓점에 옮겨 놓아도, 이 변의 양 끝 각이라고 할 수 있을까요?';
+        description='주황색 밑변의 양 끝에서 삼각형 안쪽 각을 파란색과 보라색으로 각각 강조한 삼각형';
+      } else if(kind==='compare') {
+        const first=exampleTriangle(44,216,220,40,60),second=exampleTriangle(366,216,220,40,80);
+        const [a,b,c]=first,[d,e,f]=second;
+        drawing=triangleOutline(first)+triangleOutline(second)
+          +relationSector(a,b,c,colors.firstAngle,31)+relationSector(b,c,a,colors.secondAngle,31)
+          +relationSector(d,e,f,colors.firstAngle,31)+relationSector(f,d,e,colors.secondAngle,31)
+          +relationLine(a,b,colors.side,5)+relationLine(d,e,colors.side,5)
+          +'<text x="154" y="246" text-anchor="middle" fill="#475569" font-size="13">한 변의 양 끝에 두 각</text>'
+          +'<text x="476" y="246" text-anchor="middle" fill="#475569" font-size="13">한 끝의 각 + 맞은편 각</text>';
+        legend=[[colors.side,'같은 길이의 선분 ①'],[colors.firstAngle,'같은 크기의 각 ①'],[colors.secondAngle,'같은 크기의 각 ②']];
+        explanation='두 그림에서 같은 색은 같은 길이 또는 같은 크기의 각을 뜻합니다. 주어진 재료를 어느 위치에 놓았는지 비교해 보세요.';
+        question='한 변과 두 각이 각각 같다는 것만으로 합동일까요? 어떤 위치 관계까지 확인해야 할까요?';
+        description='같은 길이의 밑변과 같은 두 각을 사용하되, 왼쪽은 양 끝 각에, 오른쪽은 한 끝과 맞은편 꼭짓점에 배치하여 서로 다른 크기의 삼각형이 되는 비교 그림';
+      } else {
+        // Source lengths 8 and 4 with a non-included angle: ray meets the circle at distances 6 and 8.
+        const start={x:100,y:210},center={x:275,y:210-25*Math.sqrt(15)},first={x:250,y:210},second={x:300,y:210};
+        drawing=relationLine(start,{x:540,y:210},'#94a3b8',2)
+          +'<circle cx="'+center.x+'" cy="'+center.y+'" r="100" fill="none" stroke="'+colors.secondSide+'" stroke-width="2" stroke-dasharray="6 5"/>'
+          +relationSector(start,first,center,colors.firstAngle,42)
+          +relationLine(start,center,colors.side,5)
+          +relationLine(center,first,colors.secondSide,3)
+          +'<path d="M'+center.x+' '+center.y+' L'+second.x+' '+second.y+'" stroke="'+colors.secondSide+'" stroke-width="3" stroke-dasharray="5 4"/>'
+          +'<circle cx="250" cy="210" r="5" fill="#2563eb"/><circle cx="300" cy="210" r="5" fill="#7c3aed"/>'
+          +'<text x="243" y="238" text-anchor="end" fill="#2563eb" font-size="13">교점 후보 ①</text><text x="307" y="238" fill="#7c3aed" font-size="13">교점 후보 ②</text>';
+        legend=[[colors.side,'한 변'],[colors.firstAngle,'주어진 각'],[colors.secondSide,'다른 변의 길이를 반지름으로 한 원']];
+        explanation='두 변과 그 사이에 있지 않은 각을 주면, 반직선과 원이 두 점에서 만나 삼각형이 두 개 만들어지는 경우도 있습니다.';
+        question='각 교점을 세 번째 꼭짓점으로 삼아 보세요. 두 삼각형은 어떤 조건을 똑같이 만족하나요?';
+        description='한 변과 그에 붙은 각으로 정한 반직선에, 다른 변의 길이를 반지름으로 한 원이 두 점에서 만나는 예시. 두 교점이 서로 다른 삼각형의 세 번째 꼭짓점 후보이다.';
+      }
+      document.getElementById('relation-diagram').innerHTML='<svg viewBox="0 0 660 260" role="img" aria-label="'+description+'">'+drawing+'</svg>';
+      document.getElementById('relation-legend').innerHTML=legend.map(([color,label])=>'<span><i style="background:'+color+'"></i>'+label+'</span>').join('');
+      document.getElementById('relation-explanation').textContent=explanation;
+      document.getElementById('relation-question').textContent=question;
+    }
+    document.getElementById('btn-relations').addEventListener('click',()=>{
+      // Explanatory diagrams remain separate from students' construction.
+      document.getElementById('relations-dialog').showModal();
+    });
+    document.querySelectorAll('[data-relation]').forEach(button=>{
+      button.addEventListener('click',()=>showRelation(button.dataset.relation));
+      button.addEventListener('keydown',event=>{
+        const tabs=[...document.querySelectorAll('[data-relation]')],index=tabs.indexOf(button);
+        let next;
+        if(event.key==='ArrowRight') next=(index+1)%tabs.length;
+        else if(event.key==='ArrowLeft') next=(index+tabs.length-1)%tabs.length;
+        else if(event.key==='Home') next=0;
+        else if(event.key==='End') next=tabs.length-1;
+        if(next===undefined)return;
+        event.preventDefault();showRelation(tabs[next].dataset.relation);tabs[next].focus();
+      });
+    });
+    showRelation('included');
+
     renderConditions();
     new ResizeObserver(resizeCanvas).observe(document.querySelector('.lesson-layout'));
 
