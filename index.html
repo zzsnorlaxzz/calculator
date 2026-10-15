@@ -203,6 +203,22 @@ body {height:100dvh;display:flex;flex-direction:column;padding:16px;gap:16px;col
  .panel-note {font-size:11px;}
 }
 
+
+/* One continuous drawing surface lets the compass copy conditions to the workspace. */
+body {height:auto;min-height:100dvh;}
+.toolbar-container {position:sticky;top:10px;left:auto;z-index:100;}
+.lesson-layout {position:relative;flex:none;min-height:calc(100dvh - 100px);align-items:stretch;}
+.condition-column {overflow:visible;}
+.conditions-panel {min-height:780px;flex:1;}
+#condition-cards {height:100%;min-height:720px;flex:1;padding:0;display:block;overflow:visible;}
+#geometryCanvas {position:absolute;inset:0;z-index:1;width:100%;height:100%;background:transparent;}
+#canvas-container {min-height:600px;}
+.panel-heading {position:relative;}
+@media(max-width:720px) {
+ .conditions-panel {max-height:none;min-height:780px;}
+ .drawing-panel {height:75dvh;min-height:650px;}
+ .lesson-layout {min-height:0;}
+}
 </style>
 </head>
 <body>
@@ -288,7 +304,7 @@ body {height:100dvh;display:flex;flex-direction:column;padding:16px;gap:16px;col
   <main class="lesson-layout">
     <aside class="condition-column">
       <section class="lesson-panel" aria-labelledby="conditions-title">
-        <h2 class="panel-heading" id="conditions-title"><span class="area-letter">B</span>조건 선택<span class="panel-note" id="selection-count">0 / 3개</span></h2>
+        <h2 class="panel-heading" id="conditions-title">조건 선택<span class="panel-note" id="selection-count">0 / 3개</span></h2>
         <fieldset id="condition-options" aria-label="삼각형 조건 (최대 3개)">
           <label><input type="checkbox" value="AB">선분 AB</label>
           <label><input type="checkbox" value="BC">선분 BC</label>
@@ -300,17 +316,18 @@ body {height:100dvh;display:flex;flex-direction:column;padding:16px;gap:16px;col
         <p id="condition-feedback" role="status">조건은 최대 3개까지 선택할 수 있습니다.</p>
       </section>
       <section class="lesson-panel conditions-panel" aria-labelledby="given-title">
-        <h2 class="panel-heading" id="given-title"><span class="area-letter">C</span>주어진 조건</h2>
+        <h2 class="panel-heading" id="given-title">주어진 조건</h2>
         <div id="condition-cards" aria-live="polite"></div>
       </section>
     </aside>
     <section class="lesson-panel drawing-panel" aria-labelledby="drawing-title">
-      <h2 class="panel-heading" id="drawing-title"><span class="area-letter">A</span>작도 공간<span class="panel-note">고정 배율 · 1단위 = 40px</span></h2>
-      <div id="canvas-container"><canvas id="geometryCanvas" aria-label="기하 작도 공간"></canvas>  <button id="quick-eraser-btn">
+      <h2 class="panel-heading" id="drawing-title">작도 공간<span class="panel-note">고정 배율</span></h2>
+      <div id="canvas-container">  <button id="quick-eraser-btn">
     지우개<br><small>누른 채로</small>
   </button></div>
       <div id="status-bar" role="status">도구를 선택하여 작도하세요.</div>
     </section>
+    <canvas id="geometryCanvas" aria-label="주어진 조건과 작도 공간에 함께 사용하는 작도판"></canvas>
   </main>
 
   <script>
@@ -390,11 +407,73 @@ body {height:100dvh;display:flex;flex-direction:column;padding:16px;gap:16px;col
 
     window.addEventListener('contextmenu', e => e.preventDefault());
 
+    let drawingRegions = [];
+    let conditionGeometry = [];
+    let conditionLabels = [];
+    function localRect(element) {
+      const rect = element.getBoundingClientRect();
+      const base = canvas.getBoundingClientRect();
+      return { x: rect.left - base.left, y: rect.top - base.top, w: rect.width, h: rect.height };
+    }
     function resizeCanvas() {
-      const container = document.getElementById('canvas-container');
-      canvas.width = container.offsetWidth;
-      canvas.height = container.offsetHeight;
+      const layout = document.querySelector('.lesson-layout');
+      canvas.width = layout.clientWidth;
+      canvas.height = layout.clientHeight;
+      const given = localRect(document.getElementById('condition-cards'));
+      const workspace = localRect(document.getElementById('canvas-container'));
+      drawingRegions = [given, workspace];
+      // Separate subpaths keep the condition controls, headers and gap clickable.
+      canvas.style.clipPath = 'path("' + drawingRegions.map(r =>
+        'M' + r.x + ' ' + r.y + ' h' + r.w + ' v' + r.h + ' h-' + r.w + ' Z').join(' ') + '")';
+      layoutConditions(given);
       render();
+    }
+    function inDrawingRegion(point) {
+      return drawingRegions.some(r => point.x >= r.x && point.x <= r.x+r.w && point.y >= r.y && point.y <= r.y+r.h);
+    }
+    function layoutConditions(area) {
+      conditionGeometry = [];
+      conditionLabels = [];
+      const selected = [...document.querySelectorAll('#condition-options input:checked')].map(input => input.value);
+      const rowHeight = area.h / Math.max(3, selected.length);
+      selected.forEach((key, index) => {
+        const top = area.y + index * rowHeight;
+        conditionLabels.push({ text: key.length === 2 ? '선분 ' + key : '각 ' + key, x: area.x + 20, y: top + 28, heading: true });
+        const color = '#2563eb';
+        if (key.length === 2) {
+          const length = triangleSides[key] * 40;
+          const p1 = { x: area.x + (area.w-length)/2, y: top+rowHeight*.57 };
+          const p2 = { x: p1.x+length, y: p1.y };
+          conditionGeometry.push({type:'segment',p1,p2,color});
+          conditionLabels.push({text:key[0],x:p1.x-6,y:p1.y+24},{text:key[1],x:p2.x-6,y:p2.y+24});
+        } else {
+          const rad = triangleAngles[key] * Math.PI/180;
+          const rayLength = Math.min(150, area.w*.37, rowHeight*.65);
+          const span = rayLength*(1-Math.min(0,Math.cos(rad)));
+          const vertex = {x:area.x+(area.w-span)/2-rayLength*Math.min(0,Math.cos(rad)),y:top+rowHeight*.83};
+          const end1 = {x:vertex.x+rayLength,y:vertex.y};
+          const end2 = {x:vertex.x+rayLength*Math.cos(rad),y:vertex.y-rayLength*Math.sin(rad)};
+          conditionGeometry.push({type:'segment',p1:vertex,p2:end1,color},{type:'segment',p1:vertex,p2:end2,color},
+            {type:'arc',center:vertex,radius:44,startAngle:-rad,endAngle:0,color:'#60a5fa'});
+          conditionLabels.push({text:key,x:vertex.x-16,y:vertex.y+23});
+        }
+      });
+    }
+    function drawConditionLabels() {
+      ctx.save();
+      for (const label of conditionLabels) {
+        ctx.fillStyle = label.heading ? '#334155' : '#2563eb';
+        ctx.font = (label.heading ? '600 15px' : '15px') + ' sans-serif';
+        ctx.fillText(label.text,label.x,label.y);
+      }
+      if (!conditionLabels.length) {
+        const area=drawingRegions[0];
+        if (area) {
+          ctx.fillStyle='#64748b';ctx.font='14px sans-serif';
+          ctx.fillText('위에서 조건을 선택하세요.',area.x+24,area.y+46);
+        }
+      }
+      ctx.restore();
     }
     window.addEventListener('resize', resizeCanvas);
     window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 150));
@@ -517,6 +596,7 @@ body {height:100dvh;display:flex;flex-direction:column;padding:16px;gap:16px;col
     }
 
     function getAllIntersections() {
+      const elements = [...conditionGeometry, ...getUserElements()];
       const inters = [];
       for (let i = 0; i < elements.length; i++) {
         for (let j = i + 1; j < elements.length; j++) {
@@ -543,7 +623,10 @@ body {height:100dvh;display:flex;flex-direction:column;padding:16px;gap:16px;col
       return inters;
     }
 
+    function getUserElements() { return elements; }
+
     function getAllPoints() {
+      const elements = [...conditionGeometry, ...getUserElements()];
       const pts = [];
       for (const el of elements) {
         if (el.type === 'point') pts.push({ x: el.x, y: el.y, isIntersection: false });
@@ -603,6 +686,7 @@ body {height:100dvh;display:flex;flex-direction:column;padding:16px;gap:16px;col
     }
 
     function findSnapPoint(worldPos) {
+      const elements = [...conditionGeometry, ...getUserElements()];
       if (['pan', 'lasso', 'eraser'].includes(currentTool)) return null;
       
       const snapThreshold = 18 / scale; 
@@ -927,7 +1011,8 @@ body {height:100dvh;display:flex;flex-direction:column;padding:16px;gap:16px;col
       ctx.save(); ctx.translate(originX, originY); ctx.scale(scale, scale);
       drawGrid();
 
-      for (const el of elements) {
+      drawConditionLabels();
+      for (const el of [...conditionGeometry, ...elements]) {
         ctx.strokeStyle = el.color || '#374151'; ctx.fillStyle = el.color || '#1f2937'; 
         ctx.lineWidth = (el.lineWidth || 1.8) / scale; 
         
@@ -1172,6 +1257,7 @@ body {height:100dvh;display:flex;flex-direction:column;padding:16px;gap:16px;col
       if (activePointers.size > 1) { cancelCurrentAction(); return; }
 
       const rawWorld = screenToWorld(e.clientX, e.clientY);
+      if (!inDrawingRegion(rawWorld)) return;
       mouseWorld = rawWorld;
       activeSnapPoint = findSnapPoint(rawWorld);
       const targetPos = activeSnapPoint || rawWorld;
@@ -1302,6 +1388,12 @@ body {height:100dvh;display:flex;flex-direction:column;padding:16px;gap:16px;col
 
       mouseWorld = screenToWorld(e.clientX, e.clientY);
       activeSnapPoint = findSnapPoint(mouseWorld);
+      if (!inDrawingRegion(mouseWorld)) {
+        if (isDrawingPen && currentPath.length > 1) {
+          recordState(); elements.push({type:'path',points:currentPath,color:currentColor,lineWidth:2}); currentPath=[];
+        }
+        render(); return;
+      }
 
       const isTouching = activePointers.has(e.pointerId);
       if (currentTool === 'eraser' && isTouching) {
@@ -1487,7 +1579,6 @@ body {height:100dvh;display:flex;flex-direction:column;padding:16px;gap:16px;col
       render();
     });
 
-    canvas.addEventListener('wheel', e => e.preventDefault(), { passive: false });
 
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') { 
@@ -1626,24 +1717,16 @@ body {height:100dvh;display:flex;flex-direction:column;padding:16px;gap:16px;col
       document.getElementById('condition-feedback').textContent = selected.length === 3
         ? '3개를 선택했습니다. 다른 조건을 선택하려면 먼저 하나를 해제하세요.'
         : '조건은 최대 3개까지 선택할 수 있습니다.';
-      document.getElementById('condition-cards').innerHTML = selected.length ? selected.map(input => {
-        const key = input.value;
-        if (key.length === 2) {
-          const length = triangleSides[key], end = 24 + length * 40;
-          return '<article class="condition-card"><h3>선분 ' + key + ' = ' + length + '</h3><svg viewBox="0 0 380 104" role="img" aria-label="선분 ' + key + ', 길이 ' + length + '"><path d="M24 50 H' + end + '" stroke="#2563eb" stroke-width="3"/><circle cx="24" cy="50" r="4" fill="#2563eb"/><circle cx="' + end + '" cy="50" r="4" fill="#2563eb"/><text x="24" y="78" text-anchor="middle">' + key[0] + '</text><text x="' + end + '" y="78" text-anchor="middle">' + key[1] + '</text><text x="' + (24 + length * 20) + '" y="34" text-anchor="middle">' + length + '</text></svg></article>';
-        }
-        const angle = triangleAngles[key], rad = angle * Math.PI / 180;
-        const x = 140 + 76 * Math.cos(rad), y = 87 - 76 * Math.sin(rad);
-        const ax = 140 + 28 * Math.cos(rad), ay = 87 - 28 * Math.sin(rad);
-        return '<article class="condition-card"><h3>∠' + key + ' ≈ ' + angle.toFixed(6) + '°</h3><svg viewBox="0 0 380 104" role="img" aria-label="각 ' + key + ', 약 ' + angle.toFixed(6) + '도"><path d="M216 87 H140 L' + x + ' ' + y + '" fill="none" stroke="#2563eb" stroke-width="3"/><path d="M168 87 A28 28 0 0 0 ' + ax + ' ' + ay + '" fill="none" stroke="#60a5fa" stroke-width="2"/><text x="124" y="100">' + key + '</text><text x="242" y="55">' + angle.toFixed(2) + '°</text></svg></article>';
-      }).join('') : '<p class="empty-conditions">B에서 조건을 선택하면<br>선분과 각이 여기에 나타납니다.</p>';
+      document.getElementById('condition-cards').setAttribute('aria-label',
+        selected.length ? selected.map(input => input.value.length === 2 ? '선분 ' + input.value : '각 ' + input.value).join(', ') : '선택한 조건 없음');
+      resizeCanvas();
     }
     conditionInputs.forEach(input => input.addEventListener('change', () => {
       if (conditionInputs.filter(item => item.checked).length > 3) input.checked = false;
       renderConditions();
     }));
     renderConditions();
-    new ResizeObserver(resizeCanvas).observe(document.getElementById('canvas-container'));
+    new ResizeObserver(resizeCanvas).observe(document.querySelector('.lesson-layout'));
 
     resizeCanvas();
     setActiveTool('pan');
