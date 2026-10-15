@@ -479,10 +479,8 @@ body {min-height:0;padding:12px;gap:12px;}
           conditionLabels.push({text:key[0],x:p1.x-6,y:p1.y+24},{text:key[1],x:p2.x-6,y:p2.y+24});
         } else {
           const rad = triangleAngles[key] * Math.PI/180;
-          const half = rad/2;
-          // Rotate the same angle to use horizontal space without changing its measure.
-          const middle = rad > Math.PI/2 ? -Math.PI/2 : 0;
-          const directions = [middle-half,middle+half];
+          // Keep one ray horizontal, parallel to the construction baseline.
+          const directions = [0,-rad];
           const unitPoints = [{x:0,y:0},...directions.map(a=>({x:Math.cos(a),y:Math.sin(a)}))];
           const minX=Math.min(...unitPoints.map(p=>p.x)),maxX=Math.max(...unitPoints.map(p=>p.x));
           const minY=Math.min(...unitPoints.map(p=>p.y)),maxY=Math.max(...unitPoints.map(p=>p.y));
