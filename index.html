@@ -129,39 +129,6 @@
       white-space: nowrap;
     }
 
-    #quick-eraser-btn {
-      position: absolute;
-      bottom: 30px;
-      left: 30px;
-      width: 72px;
-      height: 72px;
-      background-color: #ef4444;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      font-size: 14px;
-      font-weight: bold;
-      line-height: 1.2;
-      box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
-      cursor: pointer;
-      z-index: 200;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      transition: transform 0.1s, background-color 0.1s;
-      touch-action: none;
-    }
-    #quick-eraser-btn:active {
-      transform: scale(0.92);
-      background-color: #dc2626;
-    }
-    #quick-eraser-btn small {
-      font-size: 10px;
-      font-weight: normal;
-      opacity: 0.9;
-    }
-
     #image-input {
       display: none;
     }
@@ -191,7 +158,6 @@ body {height:100dvh;display:flex;flex-direction:column;padding:16px;gap:16px;col
 .drawing-panel {display:flex;flex-direction:column;min-width:0;min-height:0;}
 #canvas-container {position:relative;top:auto;left:auto;width:100%;height:auto;flex:1;min-height:200px;overflow:hidden;}
 #status-bar {position:static;transform:none;border-radius:0;background:#f8fafc;color:#475569;box-shadow:none;white-space:normal;backdrop-filter:none;padding:10px 16px;min-height:38px;font-size:12px;}
-#quick-eraser-btn {position:absolute;bottom:16px;left:16px;width:56px;height:56px;opacity:.9;}
 @media(max-width:720px) {
  body {height:auto;min-height:100dvh;padding:10px;gap:10px;}
  .lesson-layout {grid-template-columns:1fr;flex:none;}
@@ -245,10 +211,6 @@ body {min-height:0;padding:12px;gap:12px;}
 
 .small-action {padding:4px 8px;border:1px solid #cbd5e1;border-radius:6px;color:#2563eb;background:#eff6ff;cursor:pointer;white-space:nowrap;}
 .small-action[hidden] {display:none;}
-#pen-settings {border:1px solid #dce3ec;border-radius:14px;max-width:calc(100vw - 32px);padding:20px;color:#334155;font-size:14px;line-height:1.65;}
-#pen-settings h2 {font-size:18px;margin:0 0 12px;}
-#pen-settings::backdrop {background:rgba(15,23,42,.3);}
-#pen-settings button {padding:6px 18px;cursor:pointer;}
 
 #btn-relations {margin-left:auto;font-size:12px;}
 #conditions-title .panel-note {margin-left:0;}
@@ -291,7 +253,7 @@ body {min-height:0;padding:12px;gap:12px;}
       <button class="tool-btn" id="btn-lasso" title="올가미 (Ctrl+G)">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 22a5 5 0 0 1-2-4"/><path d="M3.3 14A6.8 6.8 0 0 1 2 10c0-4.4 4.5-8 10-8s10 3.6 10 8-4.5 8-10 8a12 12 0 0 1-5-1"/><circle cx="5" cy="19" r="2"/></svg>
       </button>
-      <button class="tool-btn" id="btn-eraser" title="대상 지우개 (S펜 측면 버튼 유지)">
+      <button class="tool-btn" id="btn-eraser" title="대상 지우개">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
       </button>
       
@@ -348,9 +310,6 @@ body {min-height:0;padding:12px;gap:12px;}
 
       <div class="divider"></div>
 
-      <button class="tool-btn" id="btn-pen-settings" title="S펜 설정 / 버튼 신호 확인" aria-label="S펜 설정">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2"/></svg>
-      </button>
       <!-- 6그룹: 히스토리 -->
       <button class="tool-btn" id="btn-undo" title="실행 취소 (Ctrl+Z)">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
@@ -361,15 +320,6 @@ body {min-height:0;padding:12px;gap:12px;}
     </div>
   </div>
 
-  <dialog id="pen-settings">
-    <h2>펜 설정</h2>
-    <label><input type="checkbox" id="pen-only" checked> 펜 사용 후 손가락 입력 차단</label>
-    <p>손바닥이 닿아 작도가 끊기는 것을 막습니다.<br>손가락으로 그리려면 이 옵션을 해제하세요.</p>
-    <p id="pen-signal" role="status">아직 펜 입력이 없습니다.</p>
-    <p>측면 버튼을 누른 채 작도판을 짚어 보세요.<br>버튼 신호가 확인되면 누르는 동안 지우개로 바뀝니다.</p>
-    <p>신호가 없으면 태블릿의 S펜 / 에어 커맨드 설정에서<br>버튼 동작이 브라우저 입력을 가로채는지 확인하세요.</p>
-    <form method="dialog"><button>닫기</button></form>
-  </dialog>
   <dialog id="relations-dialog" aria-labelledby="relations-title">
     <div class="relation-header"><h2 id="relations-title">변과 각의 위치 관계</h2><form method="dialog"><button aria-label="관계 설명 닫기">닫기</button></form></div>
     <p class="relation-intro">선분과 각의 번호는 재료를 구분하는 표시입니다. <strong>같은 번호끼리 대응한다는 뜻은 아닙니다.</strong></p>
@@ -408,9 +358,7 @@ body {min-height:0;padding:12px;gap:12px;}
     </aside>
     <section class="lesson-panel drawing-panel" aria-labelledby="drawing-title">
       <h2 class="panel-heading" id="drawing-title">작도 공간<span class="panel-note">고정 배율</span><button id="btn-compass-radius" class="small-action" hidden>새 반지름</button></h2>
-      <div id="canvas-container">  <button id="quick-eraser-btn">
-    지우개<br><small>누른 채로</small>
-  </button></div>
+      <div id="canvas-container"></div>
       <div id="status-bar" role="status">도구를 선택하여 작도하세요.</div>
     </section>
     <canvas id="geometryCanvas" aria-label="주어진 조건과 작도 공간에 함께 사용하는 작도판"></canvas>
@@ -487,9 +435,6 @@ body {min-height:0;padding:12px;gap:12px;}
     let initialPanMid = null;
     let initialOrigin = { x: 0, y: 0 };
 
-    let tempEraserMode = false;
-    let savedTool = null;
-    let buttonTriggeredEraser = false;
 
     window.addEventListener('contextmenu', e => e.preventDefault());
 
@@ -1304,106 +1249,42 @@ body {min-height:0;padding:12px;gap:12px;}
       if (isTransformingSelection) { isTransformingSelection = false; }
     }
 
-    const quickEraserBtn = document.getElementById('quick-eraser-btn');
-    quickEraserBtn.style.display = 'none';
-
-    let penSeen = false;
-    let penButtonSeen = false;
-    let temporaryPointerId = null;
-    let contextEraserFallback = false;
-    const erasedPointers = new Set();
-    const penOnly = document.getElementById('pen-only');
     const compassRadiusBtn = document.getElementById('btn-compass-radius');
-    function ignorePalm(e) { return e.pointerType === 'touch' && penSeen && penOnly.checked; }
-    function notePenInput(e) {
-      if (e.pointerType !== 'pen') return;
-      penSeen = true;
-      if ((e.buttons & 34) !== 0) penButtonSeen = true;
-      document.getElementById('pen-signal').textContent = penButtonSeen
-        ? '펜 입력 확인 · 측면 / 지우개 버튼 신호 확인됨'
-        : '펜 입력 확인 · 아직 측면 버튼 신호는 없습니다.';
+    let lastPenInputTime = -Infinity;
+    function notePointerInput(e) {
+      if (e.pointerType === 'pen') lastPenInputTime = performance.now();
+    }
+    function ignorePalm(e) {
+      return e.pointerType === 'touch' && (performance.now()-lastPenInputTime < 700 ||
+        [...activePointers.values()].some(pointer=>pointer.pointerType === 'pen'));
     }
     function compassStatus() {
       return compassRadius > 0
         ? '컴퍼스: 폭 유지 중 · 다음 중심점을 찍고 호를 그리세요. 폭을 바꾸려면 새 반지름을 누르세요.'
         : '컴퍼스: 중심점과 반지름 끝점을 차례로 찍으세요.';
     }
-    function showCurrentTool() {
-      document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
-      document.getElementById('btn-' + currentTool)?.classList.add('active');
-      if (globalRuler) document.getElementById('btn-unmarked-ruler').classList.add('active');
-      compassRadiusBtn.hidden = currentTool !== 'compass';
-      canvas.style.cursor = currentTool === 'pan' ? 'default' : currentTool === 'eraser' ? 'pointer' : 'crosshair';
-    }
-    function beginTemporaryEraser(pointerId) {
-      if (!tempEraserMode) {
-        // Keep compass width and center, but do not finish an interrupted arc.
-        if (compassStep === 4) compassStep = 3;
-        cancelCurrentAction();
-        savedTool = currentTool;
-        tempEraserMode = true;
-        buttonTriggeredEraser = true;
-        currentTool = 'eraser';
-      }
-      temporaryPointerId = pointerId ?? temporaryPointerId;
-      showCurrentTool();
-      updateStatus('측면 버튼 지우개 · 버튼을 떼면 이전 도구로 돌아갑니다.');
-    }
-    function endTemporaryEraser() {
-      if (!tempEraserMode) return;
-      currentTool = savedTool || 'pen';
-      savedTool = null; tempEraserMode = false; buttonTriggeredEraser = false;
-      temporaryPointerId = null; contextEraserFallback = false;
-      showCurrentTool();
-      updateStatus(currentTool === 'compass' ? compassStatus() : '이전 도구로 돌아왔습니다. 펜을 다시 대어 사용하세요.');
-    }
-    function checkPenButton(e) {
-      if (e.pointerType === 'touch') return;
-      notePenInput(e);
-      // Ignore compatibility mouse events while a real pen owns the shortcut.
-      if (tempEraserMode && temporaryPointerId !== null && e.pointerId !== temporaryPointerId && !contextEraserFallback) return;
-      const pressed = (e.buttons & 34) !== 0 ||
-        (e.type === 'pointerdown' && e.buttons === 0 && (e.button === 2 || e.button === 5));
-      if (pressed) beginTemporaryEraser(e.pointerId);
-      else if (tempEraserMode && !contextEraserFallback) endTemporaryEraser();
-    }
-    // Some Android browsers report the barrel button only through contextmenu.
-    canvas.addEventListener('contextmenu', e => {
-      e.preventDefault();
-      if (e.pointerType !== 'pen' && e.button !== 2) return;
-      if (e.pointerType === 'pen') {
-        penSeen = true; penButtonSeen = true; notePenInput(e);
-      }
-      if ((e.buttons & 34) === 0) contextEraserFallback = true;
-      beginTemporaryEraser(tempEraserMode ? temporaryPointerId : (e.pointerId >= 0 ? e.pointerId : null));
-    });
-    window.addEventListener('pointerrawupdate', e => {
-      if (e.pointerType === 'pen' && (e.target === canvas || tempEraserMode)) checkPenButton(e);
-    });
     window.addEventListener('blur', () => {
-      activePointers.clear(); erasedPointers.clear();
-      cancelCurrentAction(); endTemporaryEraser(); render();
+      activePointers.clear(); cancelCurrentAction();
+      if (compassStep === 4) compassStep = 3;
+      render();
     });
-    document.getElementById('btn-pen-settings').addEventListener('click', () => document.getElementById('pen-settings').showModal());
     compassRadiusBtn.addEventListener('click', () => {
       compassStep=0;compassRadius=0;compassCenter=null;compassInitialCenter=null;
       updateStatus(compassStatus());render();
     });
 
     canvas.addEventListener('pointerdown', (e) => {
-      notePenInput(e);
+      notePointerInput(e);
       if (ignorePalm(e)) { e.preventDefault(); return; }
       if (e.pointerType === 'pen') {
         // A palm that arrived just before the pen must not cancel pen drawing.
         for (const [id, pointer] of activePointers) if (pointer.pointerType === 'touch') activePointers.delete(id);
       }
       e.preventDefault();
-      checkPenButton(e);
-      // Barrel buttons can go down while the pen is hovering.
+      // Hovering is a preview, not a drawing contact.
       if (e.pointerType === 'pen' && e.pressure === 0 && !(e.buttons & 1)) { render(); return; }
       try { canvas.setPointerCapture(e.pointerId); } catch {}
       activePointers.set(e.pointerId,e);
-      if (tempEraserMode) erasedPointers.add(e.pointerId);
 
       if (activePointers.size > 1) { cancelCurrentAction(); return; }
 
@@ -1527,13 +1408,12 @@ body {min-height:0;padding:12px;gap:12px;}
     });
 
     window.addEventListener('pointermove', (e) => {
-      notePenInput(e);
+      notePointerInput(e);
       if (ignorePalm(e)) return;
       if (activePointers.has(e.pointerId)) {
         activePointers.set(e.pointerId, e);
       }
 
-      checkPenButton(e);
 
       if (activePointers.size > 1) return;
       const rect = canvas.getBoundingClientRect();
@@ -1550,11 +1430,6 @@ body {min-height:0;padding:12px;gap:12px;}
 
       const isTouching = e.pointerType === 'pen'
         ? (e.pressure > 0 || (e.buttons & 1) !== 0) : activePointers.has(e.pointerId);
-      if (tempEraserMode && isTouching) {
-        activePointers.set(e.pointerId,e); erasedPointers.add(e.pointerId);
-      }
-      // Releasing the side button mid-contact must not add an unwanted stroke.
-      if (!tempEraserMode && erasedPointers.has(e.pointerId)) { render(); return; }
       if (currentTool === 'eraser' && isTouching) {
         const hitIdx = findElementAt(mouseWorld);
         if (hitIdx !== -1) { recordState(); elements.splice(hitIdx, 1); }
@@ -1643,24 +1518,13 @@ body {min-height:0;padding:12px;gap:12px;}
 
     const handlePointerUp = (e) => {
       if (ignorePalm(e)) { activePointers.delete(e.pointerId); return; }
-      const wasTemporaryEraser = tempEraserMode || erasedPointers.has(e.pointerId);
-      checkPenButton(e);
-      if (contextEraserFallback && (e.pointerId === temporaryPointerId || e.pointerType === 'pen')) endTemporaryEraser();
-      erasedPointers.delete(e.pointerId);
       if (!activePointers.has(e.pointerId)) { render(); return; }
       mouseWorld = screenToWorld(e.clientX, e.clientY);
       activeSnapPoint = findSnapPoint(mouseWorld);
       activePointers.delete(e.pointerId);
       
-      const wasEraser = wasTemporaryEraser; 
-      checkPenButton(e); 
 
       if (activePointers.size > 0) return;
-
-      if (wasEraser) {
-        render();
-        return; 
-      }
 
       const targetPos = activeSnapPoint || mouseWorld;
 
@@ -1738,18 +1602,15 @@ body {min-height:0;padding:12px;gap:12px;}
     window.addEventListener('pointerup', handlePointerUp);
     window.addEventListener('pointercancel', e => {
       const owned = activePointers.delete(e.pointerId);
-      erasedPointers.delete(e.pointerId);
       if (ignorePalm(e)) return;
-      if (tempEraserMode && e.pointerId === temporaryPointerId) endTemporaryEraser();
       if (owned) { cancelCurrentAction(); if (compassStep === 4) compassStep = 3; }
       render();
     });
     canvas.addEventListener('lostpointercapture', e => {
       if (!activePointers.has(e.pointerId)) return;
-      activePointers.delete(e.pointerId); erasedPointers.delete(e.pointerId);
+      activePointers.delete(e.pointerId);
       cancelCurrentAction();
       if (compassStep === 4) compassStep = 3;
-      if (tempEraserMode && e.pointerId === temporaryPointerId) endTemporaryEraser();
       render();
     });
 
@@ -1806,10 +1667,7 @@ body {min-height:0;padding:12px;gap:12px;}
     function setActiveTool(tool) {
       const resetCompassWidth = tool === 'compass' && currentTool === 'compass';
       currentTool = tool;
-      contextEraserFallback = false; temporaryPointerId = null; erasedPointers.clear();
       compassRadiusBtn.hidden = tool !== 'compass';
-      tempEraserMode = false;
-      savedTool = null;
       
       document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
       const activeBtn = document.getElementById('btn-' + tool);
