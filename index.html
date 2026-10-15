@@ -219,6 +219,29 @@ body {height:auto;min-height:100dvh;}
  .drawing-panel {height:75dvh;min-height:650px;}
  .lesson-layout {min-height:0;}
 }
+/* Keep the complete lesson visible on landscape and portrait tablets. */
+html,body {height:100dvh;overflow:hidden;}
+body {min-height:0;padding:12px;gap:12px;}
+.toolbar-container {position:static;left:auto;transform:none;}
+.toolbar {padding:5px 9px;gap:3px;}
+.tool-btn {width:32px;height:32px;}
+.lesson-layout {flex:1;min-height:0;grid-template-columns:minmax(350px,.95fr) minmax(0,1.35fr);gap:12px;}
+.condition-column {gap:12px;min-height:0;}
+.conditions-panel {min-height:0;max-height:none;}
+#condition-cards {height:auto;min-height:0;}
+.drawing-panel {height:auto;min-height:0;}
+#canvas-container {min-height:0;}
+.panel-heading {padding:10px 16px;font-size:15px;flex:none;}
+#condition-options {padding:12px 16px;gap:10px 8px;}
+#condition-feedback {padding:0 16px 12px;font-size:12px;}
+#status-bar {min-height:32px;padding:8px 12px;}
+@media(max-width:600px) {
+ html,body {height:auto;min-height:100dvh;overflow:auto;}
+ .lesson-layout {display:grid;grid-template-columns:1fr;flex:none;}
+ .conditions-panel {height:600px;flex:none;}
+ .drawing-panel {height:65dvh;min-height:420px;}
+ .toolbar-container {position:sticky;top:8px;}
+}
 </style>
 </head>
 <body>
@@ -435,7 +458,7 @@ body {height:auto;min-height:100dvh;}
       conditionGeometry = [];
       conditionLabels = [];
       const selected = [...document.querySelectorAll('#condition-options input:checked')].map(input => input.value);
-      const rowHeight = area.h / Math.max(3, selected.length);
+      const rowHeight = area.h / Math.max(1, selected.length);
       selected.forEach((key, index) => {
         const top = area.y + index * rowHeight;
         conditionLabels.push({ text: key.length === 2 ? '선분 ' + key : '각 ' + key, x: area.x + 20, y: top + 28, heading: true });
@@ -448,14 +471,20 @@ body {height:auto;min-height:100dvh;}
           conditionLabels.push({text:key[0],x:p1.x-6,y:p1.y+24},{text:key[1],x:p2.x-6,y:p2.y+24});
         } else {
           const rad = triangleAngles[key] * Math.PI/180;
-          const rayLength = Math.min(150, area.w*.37, rowHeight*.65);
-          const span = rayLength*(1-Math.min(0,Math.cos(rad)));
-          const vertex = {x:area.x+(area.w-span)/2-rayLength*Math.min(0,Math.cos(rad)),y:top+rowHeight*.83};
-          const end1 = {x:vertex.x+rayLength,y:vertex.y};
-          const end2 = {x:vertex.x+rayLength*Math.cos(rad),y:vertex.y-rayLength*Math.sin(rad)};
-          conditionGeometry.push({type:'segment',p1:vertex,p2:end1,color},{type:'segment',p1:vertex,p2:end2,color},
-            {type:'arc',center:vertex,radius:44,startAngle:-rad,endAngle:0,color:'#60a5fa'});
-          conditionLabels.push({text:key,x:vertex.x-16,y:vertex.y+23});
+          const half = rad/2;
+          // Rotate the same angle to use horizontal space without changing its measure.
+          const middle = rad > Math.PI/2 ? -Math.PI/2 : 0;
+          const directions = [middle-half,middle+half];
+          const unitPoints = [{x:0,y:0},...directions.map(a=>({x:Math.cos(a),y:Math.sin(a)}))];
+          const minX=Math.min(...unitPoints.map(p=>p.x)),maxX=Math.max(...unitPoints.map(p=>p.x));
+          const minY=Math.min(...unitPoints.map(p=>p.y)),maxY=Math.max(...unitPoints.map(p=>p.y));
+          const availableHeight=Math.max(24,rowHeight-44);
+          const rayLength=Math.min(220,(area.w-64)/(maxX-minX),availableHeight/(maxY-minY));
+          const vertex={x:area.x+(area.w-rayLength*(maxX-minX))/2-rayLength*minX,
+            y:top+34+(availableHeight-rayLength*(maxY-minY))/2-rayLength*minY};
+          const ends=directions.map(a=>({x:vertex.x+rayLength*Math.cos(a),y:vertex.y+rayLength*Math.sin(a)}));
+          conditionGeometry.push({type:'segment',p1:vertex,p2:ends[0],color},{type:'segment',p1:vertex,p2:ends[1],color});
+          conditionLabels.push({text:key,x:vertex.x-18,y:vertex.y+5});
         }
       });
     }
